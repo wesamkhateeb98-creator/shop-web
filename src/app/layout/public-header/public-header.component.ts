@@ -46,13 +46,15 @@ import { AuthService } from '@core/services/auth.service';
           </button>
 
           @if (authService.isLoggedIn()) {
-            <!-- Dashboard -->
-            <a
-              routerLink="/dashboard"
-              class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
-            >
-              {{ 'nav.dashboard' | translate }}
-            </a>
+            @if (authService.isAdmin()) {
+              <!-- Dashboard (Admin only) -->
+              <a
+                routerLink="/dashboard"
+                class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
+              >
+                {{ 'nav.dashboard' | translate }}
+              </a>
+            }
             <!-- Logout -->
             <button
               class="px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-danger)] text-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-white transition-colors"

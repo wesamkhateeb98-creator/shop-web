@@ -126,7 +126,10 @@ export class LoginComponent {
       .signin({ phoneNumber, password })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.router.navigate(['/dashboard']),
+        next: (response) => {
+          const route = response.role === 1 ? '/dashboard' : '/';
+          this.router.navigate([route]);
+        },
         error: () => {
           this.isSubmitting.set(false);
           this.errorMessage.set('Invalid phone number or password');
