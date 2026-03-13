@@ -4,7 +4,8 @@
     "products": "المنتجات",
     "login": "تسجيل الدخول",
     "dashboard": "لوحة التحكم",
-    "visitStore": "زيارة المتجر"
+    "visitStore": "زيارة المتجر",
+    "logout": "تسجيل الخروج"
   },
   "products": {
     "title": "المنتجات",

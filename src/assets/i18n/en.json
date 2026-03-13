@@ -4,7 +4,8 @@
     "products": "Products",
     "login": "Login",
     "dashboard": "Dashboard",
-    "visitStore": "Visit Store"
+    "visitStore": "Visit Store",
+    "logout": "Logout"
   },
   "products": {
     "title": "Products",

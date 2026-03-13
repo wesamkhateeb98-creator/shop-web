@@ -53,6 +53,13 @@ import { AuthService } from '@core/services/auth.service';
             >
               {{ 'nav.dashboard' | translate }}
             </a>
+            <!-- Logout -->
+            <button
+              class="px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-danger)] text-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-white transition-colors"
+              (click)="logout()"
+            >
+              {{ 'nav.logout' | translate }}
+            </button>
           } @else {
             <!-- Login -->
             <a
@@ -76,5 +83,9 @@ export class PublicHeaderComponent {
   toggleLanguage(): void {
     const next = this.languageService.currentLang() === 'en' ? 'ar' : 'en';
     this.languageService.setLanguage(next);
+  }
+
+  logout(): void {
+    this.authService.logout();
   }
 }

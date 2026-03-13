@@ -319,7 +319,7 @@ export class DashboardProductsComponent implements OnInit {
     if (!product.discountId) return;
 
     const confirmed = await this.confirmDialog.confirm(
-      this.translate.instant('dialog.confirmDelete')
+      this.translate.instant('dialog.confirmProcess')
     );
     if (!confirmed) return;
 
