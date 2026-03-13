@@ -9,12 +9,14 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CurrencyPipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ProductService } from '@core/services/product.service';
 import { CategoryService } from '@core/services/category.service';
+import { SnackbarService } from '@core/services/snackbar.service';
 import { Product, UpdateProductRequest } from '@core/models/product.model';
 import { Category } from '@core/models/category.model';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { environment } from '@env';
 
 @Component({
   selector: 'app-dashboard-products',
@@ -140,9 +142,16 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
                 @for (product of products(); track product.id) {
                   <tr class="hover:bg-[var(--color-bg-secondary)] transition-colors">
                     <td class="px-5 py-3">
-                      <div class="w-10 h-10 rounded bg-[var(--color-bg-secondary)] overflow-hidden">
+                      <div
+                        class="w-12 h-12 rounded-lg bg-[var(--color-bg-secondary)] overflow-hidden border border-[var(--color-border)] flex items-center justify-center cursor-pointer"
+                        (click)="product.image ? previewImage.set(getImageUrl(product.image)) : null"
+                      >
                         @if (product.image) {
-                          <img [src]="product.image" [alt]="product.name" class="w-full h-full object-cover" loading="lazy" />
+                          <img [src]="getImageUrl(product.image)" [alt]="product.name" class="w-full h-full object-cover" loading="lazy" />
+                        } @else {
+                          <svg class="w-5 h-5 text-[var(--color-text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
                         }
                       </div>
                     </td>
@@ -217,6 +226,30 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
           />
         </div>
       }
+
+      <!-- Image Preview Lightbox -->
+      @if (previewImage()) {
+        <div
+          class="fixed inset-0 z-[9998] bg-black/70 flex items-center justify-center p-4"
+          (click)="previewImage.set(null)"
+        >
+          <div class="relative max-w-2xl max-h-[80vh]" (click)="$event.stopPropagation()">
+            <button
+              class="absolute -top-3 -end-3 w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 shadow-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-10"
+              (click)="previewImage.set(null)"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <img
+              [src]="previewImage()"
+              alt="Product preview"
+              class="max-w-full max-h-[80vh] rounded-xl shadow-2xl object-contain"
+            />
+          </div>
+        </div>
+      }
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -224,6 +257,8 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 export class DashboardProductsComponent implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
+  private readonly snackbar = inject(SnackbarService);
+  private readonly translate = inject(TranslateService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -234,7 +269,9 @@ export class DashboardProductsComponent implements OnInit {
   readonly showForm = signal(false);
   readonly editingProduct = signal<Product | null>(null);
   readonly isSubmitting = signal(false);
+  readonly previewImage = signal<string | null>(null);
 
+  private readonly baseUrl = environment.apiUrl.replace('/api/v1.0', '');
   private selectedFile: File | null = null;
 
   readonly productForm = this.fb.nonNullable.group({
@@ -248,6 +285,11 @@ export class DashboardProductsComponent implements OnInit {
   ngOnInit(): void {
     this.loadProducts();
     this.loadCategories();
+  }
+
+  getImageUrl(image: string): string {
+    if (image.startsWith('http')) return image;
+    return this.baseUrl + (image.startsWith('/') ? '' : '/') + image;
   }
 
   toggleForm(): void {
@@ -279,6 +321,7 @@ export class DashboardProductsComponent implements OnInit {
         .subscribe({
           next: () => {
             this.isSubmitting.set(false);
+            this.snackbar.success(this.translate.instant('snackbar.productUpdated'));
             this.toggleForm();
             this.loadProducts();
           },
@@ -303,6 +346,7 @@ export class DashboardProductsComponent implements OnInit {
         .subscribe({
           next: () => {
             this.isSubmitting.set(false);
+            this.snackbar.success(this.translate.instant('snackbar.productCreated'));
             this.toggleForm();
             this.loadProducts();
           },
@@ -327,7 +371,12 @@ export class DashboardProductsComponent implements OnInit {
     this.productService
       .deleteProduct(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.loadProducts() });
+      .subscribe({
+        next: () => {
+          this.snackbar.success(this.translate.instant('snackbar.productDeleted'));
+          this.loadProducts();
+        },
+      });
   }
 
   goToPage(page: number): void {

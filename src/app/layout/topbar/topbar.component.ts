@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, inject, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '@core/services/theme.service';
 import { LanguageService } from '@core/services/language.service';
@@ -7,7 +8,7 @@ import { AuthService } from '@core/services/auth.service';
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [TranslateModule],
+  imports: [RouterLink, TranslateModule],
   template: `
     <header
       class="sticky top-0 z-30 flex items-center justify-between h-16 px-4 border-b border-[var(--color-border)] bg-[var(--color-bg)]"
@@ -26,6 +27,19 @@ import { AuthService } from '@core/services/auth.service';
 
       <!-- Actions -->
       <div class="flex items-center gap-2">
+        <!-- Visit Store -->
+        <a
+          routerLink="/"
+          class="px-3 py-1.5 text-sm font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+        >
+          <span class="flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            {{ 'nav.visitStore' | translate }}
+          </span>
+        </a>
+
         <!-- Language toggle -->
         <button
           class="px-3 py-1.5 text-sm font-medium rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors"

@@ -1,10 +1,18 @@
 export enum OrderStatus {
-  Pending = 'Pending',
-  Processing = 'Processing',
-  Shipped = 'Shipped',
-  Delivered = 'Delivered',
-  Cancelled = 'Cancelled',
+  Pending = 0,
+  Confirmed = 1,
+  Shipped = 2,
+  Delivered = 3,
+  Cancelled = 4,
 }
+
+export const OrderStatusLabels: Record<OrderStatus, string> = {
+  [OrderStatus.Pending]: 'Pending',
+  [OrderStatus.Confirmed]: 'Confirmed',
+  [OrderStatus.Shipped]: 'Shipped',
+  [OrderStatus.Delivered]: 'Delivered',
+  [OrderStatus.Cancelled]: 'Cancelled',
+};
 
 export interface OrderSummary {
   id: number;

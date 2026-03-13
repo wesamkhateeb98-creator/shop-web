@@ -2,7 +2,9 @@
   "nav": {
     "home": "الرئيسية",
     "products": "المنتجات",
-    "login": "تسجيل الدخول"
+    "login": "تسجيل الدخول",
+    "dashboard": "لوحة التحكم",
+    "visitStore": "زيارة المتجر"
   },
   "products": {
     "title": "المنتجات",
@@ -44,7 +46,7 @@
     "totalOrders": "إجمالي الطلبات",
     "pendingOrders": "طلبات معلقة",
     "totalProducts": "إجمالي المنتجات",
-    "processingOrders": "قيد المعالجة",
+    "confirmedOrders": "طلبات مؤكدة",
     "recentOrders": "الطلبات الأخيرة",
     "amount": "المبلغ",
     "items": "العناصر",
@@ -89,7 +91,29 @@
     "yes": "نعم",
     "no": "لا",
     "noCoupons": "لا توجد قسائم",
-    "noCouponsMessage": "أنشئ أول قسيمة لتقديم خصومات."
+    "noCouponsMessage": "أنشئ أول قسيمة لتقديم خصومات.",
+    "editProduct": "تعديل المنتج",
+    "selectCategory": "اختر الفئة",
+    "category": "الفئة"
+  },
+  "snackbar": {
+    "productCreated": "تم إنشاء المنتج بنجاح",
+    "productUpdated": "تم تحديث المنتج بنجاح",
+    "productDeleted": "تم حذف المنتج بنجاح",
+    "categoryCreated": "تم إنشاء الفئة بنجاح",
+    "categoryUpdated": "تم تحديث الفئة بنجاح",
+    "categoryDeleted": "تم حذف الفئة بنجاح",
+    "couponCreated": "تم إنشاء القسيمة بنجاح",
+    "couponDeleted": "تم حذف القسيمة بنجاح",
+    "orderStatusUpdated": "تم تحديث حالة الطلب",
+    "serverError": "حدث خطأ غير متوقع في الخادم",
+    "connectionError": "تعذر الاتصال بالخادم",
+    "sessionExpired": "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.",
+    "accessDenied": "الوصول مرفوض",
+    "notFound": "المورد غير موجود",
+    "badRequest": "طلب غير صالح",
+    "validationError": "خطأ في التحقق",
+    "preconditionFailed": "الشرط المسبق غير متحقق"
   },
   "footer": {
     "description": "وجهتك الشاملة للمنتجات عالية الجودة.",

@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '@core/services/theme.service';
 import { LanguageService } from '@core/services/language.service';
+import { AuthService } from '@core/services/auth.service';
 
 @Component({
   selector: 'app-public-header',
@@ -44,13 +45,23 @@ import { LanguageService } from '@core/services/language.service';
             }
           </button>
 
-          <!-- Login -->
-          <a
-            routerLink="/auth/login"
-            class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
-          >
-            {{ 'nav.login' | translate }}
-          </a>
+          @if (authService.isLoggedIn()) {
+            <!-- Dashboard -->
+            <a
+              routerLink="/dashboard"
+              class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
+            >
+              {{ 'nav.dashboard' | translate }}
+            </a>
+          } @else {
+            <!-- Login -->
+            <a
+              routerLink="/auth/login"
+              class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
+            >
+              {{ 'nav.login' | translate }}
+            </a>
+          }
         </div>
       </div>
     </header>
@@ -60,6 +71,7 @@ import { LanguageService } from '@core/services/language.service';
 export class PublicHeaderComponent {
   protected readonly themeService = inject(ThemeService);
   protected readonly languageService = inject(LanguageService);
+  protected readonly authService = inject(AuthService);
 
   toggleLanguage(): void {
     const next = this.languageService.currentLang() === 'en' ? 'ar' : 'en';

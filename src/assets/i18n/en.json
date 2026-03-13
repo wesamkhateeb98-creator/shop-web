@@ -2,7 +2,9 @@
   "nav": {
     "home": "Home",
     "products": "Products",
-    "login": "Login"
+    "login": "Login",
+    "dashboard": "Dashboard",
+    "visitStore": "Visit Store"
   },
   "products": {
     "title": "Products",
@@ -44,7 +46,7 @@
     "totalOrders": "Total Orders",
     "pendingOrders": "Pending Orders",
     "totalProducts": "Total Products",
-    "processingOrders": "Processing Orders",
+    "confirmedOrders": "Confirmed Orders",
     "recentOrders": "Recent Orders",
     "amount": "Amount",
     "items": "Items",
@@ -89,7 +91,29 @@
     "yes": "Yes",
     "no": "No",
     "noCoupons": "No Coupons",
-    "noCouponsMessage": "Create your first coupon to offer discounts."
+    "noCouponsMessage": "Create your first coupon to offer discounts.",
+    "editProduct": "Edit Product",
+    "selectCategory": "Select category",
+    "category": "Category"
+  },
+  "snackbar": {
+    "productCreated": "Product created successfully",
+    "productUpdated": "Product updated successfully",
+    "productDeleted": "Product deleted successfully",
+    "categoryCreated": "Category created successfully",
+    "categoryUpdated": "Category updated successfully",
+    "categoryDeleted": "Category deleted successfully",
+    "couponCreated": "Coupon created successfully",
+    "couponDeleted": "Coupon deleted successfully",
+    "orderStatusUpdated": "Order status updated",
+    "serverError": "An unexpected server error occurred",
+    "connectionError": "Unable to connect to server",
+    "sessionExpired": "Session expired. Please login again.",
+    "accessDenied": "Access denied",
+    "notFound": "Resource not found",
+    "badRequest": "Bad request",
+    "validationError": "Validation error",
+    "preconditionFailed": "Precondition failed"
   },
   "footer": {
     "description": "Your one-stop shop for quality products.",

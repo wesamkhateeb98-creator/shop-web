@@ -9,8 +9,9 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CouponService } from '@core/services/coupon.service';
+import { SnackbarService } from '@core/services/snackbar.service';
 import { Coupon } from '@core/models/coupon.model';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
@@ -119,6 +120,26 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
             </table>
           </div>
         </div>
+
+        @if (totalPages() > 1) {
+          <div class="flex justify-center items-center gap-2">
+            <button
+              class="px-3 py-1.5 text-sm rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-40"
+              [disabled]="currentPage() === 1"
+              (click)="goToPage(currentPage() - 1)"
+            >
+              {{ 'products.prev' | translate }}
+            </button>
+            <span class="text-sm text-[var(--color-text-secondary)]">{{ currentPage() }} / {{ totalPages() }}</span>
+            <button
+              class="px-3 py-1.5 text-sm rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-40"
+              [disabled]="currentPage() === totalPages()"
+              (click)="goToPage(currentPage() + 1)"
+            >
+              {{ 'products.next' | translate }}
+            </button>
+          </div>
+        }
       } @else {
         <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)]">
           <app-empty-state
@@ -133,10 +154,14 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 })
 export class DashboardCouponsComponent implements OnInit {
   private readonly couponService = inject(CouponService);
+  private readonly snackbar = inject(SnackbarService);
+  private readonly translate = inject(TranslateService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly coupons = signal<Coupon[]>([]);
+  readonly currentPage = signal(1);
+  readonly totalPages = signal(0);
   readonly showForm = signal(false);
 
   readonly couponForm = this.fb.nonNullable.group({
@@ -165,6 +190,7 @@ export class DashboardCouponsComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.snackbar.success(this.translate.instant('snackbar.couponCreated'));
           this.couponForm.reset();
           this.showForm.set(false);
           this.loadCoupons();
@@ -176,13 +202,28 @@ export class DashboardCouponsComponent implements OnInit {
     this.couponService
       .deleteCoupon(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.loadCoupons() });
+      .subscribe({
+        next: () => {
+          this.snackbar.success(this.translate.instant('snackbar.couponDeleted'));
+          this.loadCoupons();
+        },
+      });
+  }
+
+  goToPage(page: number): void {
+    this.currentPage.set(page);
+    this.loadCoupons();
   }
 
   private loadCoupons(): void {
     this.couponService
-      .getCoupons({ pageSize: 50 })
+      .getCoupons({ pageNumber: this.currentPage(), pageSize: 10 })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (res) => this.coupons.set(res.content) });
+      .subscribe({
+        next: (res) => {
+          this.coupons.set(res.content);
+          this.totalPages.set(res.countPages);
+        },
+      });
   }
 }

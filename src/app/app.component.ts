@@ -1,15 +1,17 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { LoadingComponent } from './shared/components/loading/loading.component';
+import { SnackbarComponent } from './shared/components/snackbar/snackbar.component';
 import { ThemeService } from './core/services/theme.service';
 import { LanguageService } from './core/services/language.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, LoadingComponent],
+  imports: [RouterOutlet, LoadingComponent, SnackbarComponent],
   template: `
     <app-loading />
+    <app-snackbar />
     <router-outlet />
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

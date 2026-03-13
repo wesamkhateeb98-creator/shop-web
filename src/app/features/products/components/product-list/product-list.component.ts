@@ -16,6 +16,7 @@ import { CategoryService } from '@core/services/category.service';
 import { Product } from '@core/models/product.model';
 import { Category } from '@core/models/category.model';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { environment } from '@env';
 
 @Component({
   selector: 'app-product-list',
@@ -66,7 +67,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
               <div class="aspect-square bg-[var(--color-bg-secondary)] relative overflow-hidden">
                 @if (product.image) {
                   <img
-                    [src]="product.image"
+                    [src]="getImageUrl(product.image)"
                     [alt]="product.name"
                     class="w-full h-full object-cover"
                     loading="lazy"
@@ -147,6 +148,7 @@ export class ProductListComponent implements OnInit {
   private readonly categoryService = inject(CategoryService);
   private readonly destroyRef = inject(DestroyRef);
 
+  private readonly baseUrl = environment.apiUrl.replace('/api/v1.0', '');
   readonly products = signal<Product[]>([]);
   readonly categories = signal<Category[]>([]);
   readonly isLoading = signal(false);
@@ -158,6 +160,11 @@ export class ProductListComponent implements OnInit {
   ngOnInit(): void {
     this.loadCategories();
     this.loadProducts();
+  }
+
+  getImageUrl(image: string): string {
+    if (image.startsWith('http')) return image;
+    return this.baseUrl + (image.startsWith('/') ? '' : '/') + image;
   }
 
   loadProducts(): void {

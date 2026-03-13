@@ -8,17 +8,17 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { OrderService } from '@core/services/order.service';
-import { OrderSummary, OrderStatus } from '@core/models/order.model';
+import { SnackbarService } from '@core/services/snackbar.service';
+import { OrderSummary, OrderStatus, OrderStatusLabels } from '@core/models/order.model';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { StatusBadgePipe } from '../../pipes/status-badge.pipe';
 
 @Component({
   selector: 'app-dashboard-orders',
   standalone: true,
-  imports: [TranslateModule, CurrencyPipe, DatePipe, FormsModule, EmptyStateComponent, StatusBadgePipe],
+  imports: [TranslateModule, CurrencyPipe, DatePipe, EmptyStateComponent, StatusBadgePipe],
   template: `
     <div class="space-y-6">
       <div class="flex items-center justify-between">
@@ -40,7 +40,7 @@ import { StatusBadgePipe } from '../../pipes/status-badge.pipe';
             [class]="statusFilter() === status ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]' : 'border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)]'"
             (click)="filterByStatus(status)"
           >
-            {{ status }}
+            {{ statusLabels[status] }}
           </button>
         }
       </div>
@@ -69,20 +69,21 @@ import { StatusBadgePipe } from '../../pipes/status-badge.pipe';
                     <td class="px-5 py-3">{{ order.couponDiscount | currency:'USD' }}</td>
                     <td class="px-5 py-3">
                       <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium" [class]="order.status | statusBadge">
-                        {{ order.status }}
+                        {{ statusLabels[order.status] }}
                       </span>
                     </td>
                     <td class="px-5 py-3 text-[var(--color-text-secondary)]">{{ order.createdAt | date:'short' }}</td>
                     <td class="px-5 py-3">
-                      <select
-                        class="px-2 py-1 text-xs rounded border border-[var(--color-border)] bg-[var(--color-bg)]"
-                        [ngModel]="order.status"
-                        (ngModelChange)="updateStatus(order.id, $event)"
-                      >
-                        @for (s of statuses; track s) {
-                          <option [ngValue]="s">{{ s }}</option>
-                        }
-                      </select>
+                      @if (getNextStatus(order.status) !== null) {
+                        <button
+                          class="px-3 py-1 text-xs font-medium rounded-lg bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] transition-colors"
+                          (click)="updateStatus(order.id, getNextStatus(order.status)!)"
+                        >
+                          {{ statusLabels[getNextStatus(order.status)!] }}
+                        </button>
+                      } @else {
+                        <span class="text-xs text-[var(--color-text-secondary)]">-</span>
+                      }
                     </td>
                   </tr>
                 }
@@ -124,6 +125,8 @@ import { StatusBadgePipe } from '../../pipes/status-badge.pipe';
 })
 export class DashboardOrdersComponent implements OnInit {
   private readonly orderService = inject(OrderService);
+  private readonly snackbar = inject(SnackbarService);
+  private readonly translate = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly orders = signal<OrderSummary[]>([]);
@@ -131,7 +134,8 @@ export class DashboardOrdersComponent implements OnInit {
   readonly totalPages = signal(0);
   readonly statusFilter = signal<OrderStatus | null>(null);
 
-  readonly statuses = Object.values(OrderStatus);
+  readonly statuses = Object.values(OrderStatus).filter((v): v is OrderStatus => typeof v === 'number');
+  readonly statusLabels = OrderStatusLabels;
 
   ngOnInit(): void {
     this.loadOrders();
@@ -143,11 +147,25 @@ export class DashboardOrdersComponent implements OnInit {
     this.loadOrders();
   }
 
+  getNextStatus(current: OrderStatus): OrderStatus | null {
+    switch (current) {
+      case OrderStatus.Pending: return OrderStatus.Confirmed;
+      case OrderStatus.Confirmed: return OrderStatus.Shipped;
+      case OrderStatus.Shipped: return OrderStatus.Delivered;
+      default: return null;
+    }
+  }
+
   updateStatus(orderId: number, status: OrderStatus): void {
     this.orderService
       .updateOrderStatus(orderId, { status })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.loadOrders() });
+      .subscribe({
+        next: () => {
+          this.snackbar.success(this.translate.instant('snackbar.orderStatusUpdated'));
+          this.loadOrders();
+        },
+      });
   }
 
   goToPage(page: number): void {

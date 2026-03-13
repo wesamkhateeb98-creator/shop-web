@@ -8,8 +8,9 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CategoryService } from '@core/services/category.service';
+import { SnackbarService } from '@core/services/snackbar.service';
 import { Category } from '@core/models/category.model';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
@@ -108,6 +109,8 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 })
 export class DashboardCategoriesComponent implements OnInit {
   private readonly categoryService = inject(CategoryService);
+  private readonly snackbar = inject(SnackbarService);
+  private readonly translate = inject(TranslateService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -136,6 +139,7 @@ export class DashboardCategoriesComponent implements OnInit {
 
     request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
+        this.snackbar.success(this.translate.instant(this.editingId() ? 'snackbar.categoryUpdated' : 'snackbar.categoryCreated'));
         this.categoryForm.reset();
         this.editingId.set(null);
         this.showForm.set(false);
@@ -154,7 +158,12 @@ export class DashboardCategoriesComponent implements OnInit {
     this.categoryService
       .deleteCategory(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.loadCategories() });
+      .subscribe({
+        next: () => {
+          this.snackbar.success(this.translate.instant('snackbar.categoryDeleted'));
+          this.loadCategories();
+        },
+      });
   }
 
   private loadCategories(): void {

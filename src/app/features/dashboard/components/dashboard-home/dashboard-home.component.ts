@@ -4,7 +4,7 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { OrderService } from '@core/services/order.service';
 import { ProductService } from '@core/services/product.service';
-import { OrderSummary, OrderStatus } from '@core/models/order.model';
+import { OrderSummary, OrderStatus, OrderStatusLabels } from '@core/models/order.model';
 import { StatusBadgePipe } from '../../pipes/status-badge.pipe';
 
 @Component({
@@ -30,8 +30,8 @@ import { StatusBadgePipe } from '../../pipes/status-badge.pipe';
           <p class="text-2xl font-bold mt-2">{{ totalProducts() }}</p>
         </div>
         <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-5">
-          <span class="text-sm text-[var(--color-text-secondary)]">{{ 'dashboard.processingOrders' | translate }}</span>
-          <p class="text-2xl font-bold mt-2">{{ processingOrders() }}</p>
+          <span class="text-sm text-[var(--color-text-secondary)]">{{ 'dashboard.confirmedOrders' | translate }}</span>
+          <p class="text-2xl font-bold mt-2">{{ confirmedOrders() }}</p>
         </div>
       </div>
 
@@ -62,7 +62,7 @@ import { StatusBadgePipe } from '../../pipes/status-badge.pipe';
                       class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium"
                       [class]="order.status | statusBadge"
                     >
-                      {{ order.status }}
+                      {{ statusLabels[order.status] }}
                     </span>
                   </td>
                   <td class="px-5 py-3 text-[var(--color-text-secondary)]">{{ order.createdAt | date:'short' }}</td>
@@ -87,10 +87,11 @@ export class DashboardHomeComponent implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly destroyRef = inject(DestroyRef);
 
+  readonly statusLabels = OrderStatusLabels;
   readonly recentOrders = signal<OrderSummary[]>([]);
   readonly totalOrders = signal(0);
   readonly pendingOrders = signal(0);
-  readonly processingOrders = signal(0);
+  readonly confirmedOrders = signal(0);
   readonly totalProducts = signal(0);
 
   ngOnInit(): void {
@@ -109,8 +110,8 @@ export class DashboardHomeComponent implements OnInit {
           this.pendingOrders.set(
             res.content.filter((o) => o.status === OrderStatus.Pending).length
           );
-          this.processingOrders.set(
-            res.content.filter((o) => o.status === OrderStatus.Processing).length
+          this.confirmedOrders.set(
+            res.content.filter((o) => o.status === OrderStatus.Confirmed).length
           );
         },
       });
