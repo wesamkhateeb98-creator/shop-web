@@ -94,7 +94,12 @@
     "noCouponsMessage": "أنشئ أول قسيمة لتقديم خصومات.",
     "editProduct": "تعديل المنتج",
     "selectCategory": "اختر الفئة",
-    "category": "الفئة"
+    "category": "الفئة",
+    "addDiscount": "إضافة خصم",
+    "removeDiscount": "إزالة الخصم",
+    "discountPercentage": "نسبة الخصم",
+    "startDate": "تاريخ البدء",
+    "endDate": "تاريخ الانتهاء"
   },
   "snackbar": {
     "productCreated": "تم إنشاء المنتج بنجاح",
@@ -106,6 +111,8 @@
     "couponCreated": "تم إنشاء القسيمة بنجاح",
     "couponDeleted": "تم حذف القسيمة بنجاح",
     "orderStatusUpdated": "تم تحديث حالة الطلب",
+    "discountAdded": "تمت إضافة الخصم بنجاح",
+    "discountRemoved": "تمت إزالة الخصم بنجاح",
     "serverError": "حدث خطأ غير متوقع في الخادم",
     "connectionError": "تعذر الاتصال بالخادم",
     "sessionExpired": "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.",
@@ -114,6 +121,13 @@
     "badRequest": "طلب غير صالح",
     "validationError": "خطأ في التحقق",
     "preconditionFailed": "الشرط المسبق غير متحقق"
+  },
+  "dialog": {
+    "confirm": "تأكيد",
+    "cancel": "إلغاء",
+    "confirmDelete": "هل أنت متأكد أنك تريد الحذف؟",
+    "confirmProcess": "هل أنت متأكد أنك تريد إتمام هذه العملية؟",
+    "editCategory": "تعديل الفئة"
   },
   "footer": {
     "description": "وجهتك الشاملة للمنتجات عالية الجودة.",

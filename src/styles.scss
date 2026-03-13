@@ -80,6 +80,13 @@ body {
   background: var(--color-text-secondary);
 }
 
+// Form validation – red border on invalid touched fields
+input.ng-invalid.ng-touched,
+textarea.ng-invalid.ng-touched,
+select.ng-invalid.ng-touched {
+  border-color: var(--color-danger) !important;
+}
+
 // Spinner overlay
 .spinner-overlay {
   position: fixed;

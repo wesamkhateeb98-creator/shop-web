@@ -7,55 +7,29 @@ import {
   DestroyRef,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CategoryService } from '@core/services/category.service';
 import { SnackbarService } from '@core/services/snackbar.service';
+import { ConfirmDialogService } from '@core/services/confirm-dialog.service';
 import { Category } from '@core/models/category.model';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { CategoryFormDialogComponent, CategoryFormData } from '../category-form-dialog/category-form-dialog.component';
 
 @Component({
   selector: 'app-dashboard-categories',
   standalone: true,
-  imports: [TranslateModule, ReactiveFormsModule, EmptyStateComponent],
+  imports: [TranslateModule, EmptyStateComponent, CategoryFormDialogComponent],
   template: `
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold">{{ 'dashboard.categoriesManagement' | translate }}</h1>
         <button
           class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
-          (click)="showForm.set(!showForm())"
+          (click)="openAddDialog()"
         >
-          {{ showForm() ? ('dashboard.cancel' | translate) : ('dashboard.addCategory' | translate) }}
+          {{ 'dashboard.addCategory' | translate }}
         </button>
       </div>
-
-      <!-- Add/Edit Form -->
-      @if (showForm()) {
-        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-5">
-          <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="flex flex-col sm:flex-row gap-3">
-            <input
-              type="text"
-              formControlName="name"
-              class="flex-1 px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-              [placeholder]="'dashboard.categoryName' | translate"
-            />
-            <input
-              type="text"
-              formControlName="description"
-              class="flex-1 px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-              [placeholder]="'dashboard.categoryDescription' | translate"
-            />
-            <button
-              type="submit"
-              class="px-6 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
-              [disabled]="categoryForm.invalid"
-            >
-              {{ editingId() ? ('dashboard.update' | translate) : ('dashboard.add' | translate) }}
-            </button>
-          </form>
-        </div>
-      }
 
       @if (categories().length > 0) {
         <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)] overflow-hidden">
@@ -77,7 +51,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
                     <td class="px-5 py-3 text-[var(--color-text-secondary)]">{{ cat.description ?? '-' }}</td>
                     <td class="px-5 py-3">
                       <div class="flex items-center gap-2">
-                        <button class="p-1.5 rounded hover:bg-[var(--color-bg-secondary)] text-[var(--color-primary)]" (click)="editCategory(cat)">
+                        <button class="p-1.5 rounded hover:bg-[var(--color-bg-secondary)] text-[var(--color-primary)]" (click)="openEditDialog(cat)">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
@@ -103,6 +77,13 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
           />
         </div>
       }
+
+      <app-category-form-dialog
+        [visible]="showDialog()"
+        [category]="editingCategory()"
+        (saved)="onCategorySaved($event)"
+        (closed)="showDialog.set(false); editingCategory.set(null)"
+      />
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -110,51 +91,53 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 export class DashboardCategoriesComponent implements OnInit {
   private readonly categoryService = inject(CategoryService);
   private readonly snackbar = inject(SnackbarService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly translate = inject(TranslateService);
-  private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly categories = signal<Category[]>([]);
-  readonly showForm = signal(false);
-  readonly editingId = signal<number | null>(null);
-
-  readonly categoryForm = this.fb.nonNullable.group({
-    name: ['', Validators.required],
-    description: [''],
-  });
+  readonly showDialog = signal(false);
+  readonly editingCategory = signal<Category | null>(null);
 
   ngOnInit(): void {
     this.loadCategories();
   }
 
-  onSubmit(): void {
-    if (this.categoryForm.invalid) return;
+  openAddDialog(): void {
+    this.editingCategory.set(null);
+    this.showDialog.set(true);
+  }
 
-    const { name, description } = this.categoryForm.getRawValue();
-    const data = { name, description: description || null };
+  openEditDialog(cat: Category): void {
+    this.editingCategory.set(cat);
+    this.showDialog.set(true);
+  }
 
-    const request$ = this.editingId()
-      ? this.categoryService.updateCategory(this.editingId()!, data)
+  onCategorySaved(data: CategoryFormData): void {
+    const editingId = this.editingCategory()?.id;
+
+    const request$ = editingId
+      ? this.categoryService.updateCategory(editingId, data)
       : this.categoryService.createCategory(data);
 
     request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.snackbar.success(this.translate.instant(this.editingId() ? 'snackbar.categoryUpdated' : 'snackbar.categoryCreated'));
-        this.categoryForm.reset();
-        this.editingId.set(null);
-        this.showForm.set(false);
+        this.snackbar.success(
+          this.translate.instant(editingId ? 'snackbar.categoryUpdated' : 'snackbar.categoryCreated')
+        );
+        this.showDialog.set(false);
+        this.editingCategory.set(null);
         this.loadCategories();
       },
     });
   }
 
-  editCategory(cat: Category): void {
-    this.editingId.set(cat.id);
-    this.categoryForm.patchValue({ name: cat.name, description: cat.description ?? '' });
-    this.showForm.set(true);
-  }
+  async deleteCategory(id: number): Promise<void> {
+    const confirmed = await this.confirmDialog.confirm(
+      this.translate.instant('dialog.confirmDelete')
+    );
+    if (!confirmed) return;
 
-  deleteCategory(id: number): void {
     this.categoryService
       .deleteCategory(id)
       .pipe(takeUntilDestroyed(this.destroyRef))

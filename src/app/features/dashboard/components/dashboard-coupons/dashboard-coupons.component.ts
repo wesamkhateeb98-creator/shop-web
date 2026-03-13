@@ -7,70 +7,30 @@ import {
   DestroyRef,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CouponService } from '@core/services/coupon.service';
 import { SnackbarService } from '@core/services/snackbar.service';
+import { ConfirmDialogService } from '@core/services/confirm-dialog.service';
 import { Coupon } from '@core/models/coupon.model';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { CouponFormDialogComponent, CouponFormData } from '../coupon-form-dialog/coupon-form-dialog.component';
 
 @Component({
   selector: 'app-dashboard-coupons',
   standalone: true,
-  imports: [TranslateModule, ReactiveFormsModule, DatePipe, EmptyStateComponent],
+  imports: [TranslateModule, DatePipe, EmptyStateComponent, CouponFormDialogComponent],
   template: `
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold">{{ 'dashboard.couponsManagement' | translate }}</h1>
         <button
           class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
-          (click)="showForm.set(!showForm())"
+          (click)="showDialog.set(true)"
         >
-          {{ showForm() ? ('dashboard.cancel' | translate) : ('dashboard.addCoupon' | translate) }}
+          {{ 'dashboard.addCoupon' | translate }}
         </button>
       </div>
-
-      <!-- Add Form -->
-      @if (showForm()) {
-        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-5">
-          <form [formGroup]="couponForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <input
-              type="text"
-              formControlName="code"
-              class="px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-              [placeholder]="'dashboard.couponCode' | translate"
-            />
-            <input
-              type="number"
-              formControlName="percentage"
-              class="px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-              [placeholder]="'dashboard.percentage' | translate"
-              min="1"
-              max="100"
-            />
-            <input
-              type="datetime-local"
-              formControlName="expiryDate"
-              class="px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            />
-            <input
-              type="number"
-              formControlName="maxUses"
-              class="px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-              [placeholder]="'dashboard.maxUses' | translate"
-              min="1"
-            />
-            <button
-              type="submit"
-              class="sm:col-span-2 lg:col-span-4 px-6 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
-              [disabled]="couponForm.invalid"
-            >
-              {{ 'dashboard.createCoupon' | translate }}
-            </button>
-          </form>
-        </div>
-      }
 
       @if (coupons().length > 0) {
         <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)] overflow-hidden">
@@ -148,6 +108,12 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
           />
         </div>
       }
+
+      <app-coupon-form-dialog
+        [visible]="showDialog()"
+        (saved)="onCouponSaved($event)"
+        (closed)="showDialog.set(false)"
+      />
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -155,50 +121,43 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 export class DashboardCouponsComponent implements OnInit {
   private readonly couponService = inject(CouponService);
   private readonly snackbar = inject(SnackbarService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly translate = inject(TranslateService);
-  private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly coupons = signal<Coupon[]>([]);
   readonly currentPage = signal(1);
   readonly totalPages = signal(0);
-  readonly showForm = signal(false);
-
-  readonly couponForm = this.fb.nonNullable.group({
-    code: ['', Validators.required],
-    percentage: [0, [Validators.required, Validators.min(1), Validators.max(100)]],
-    expiryDate: ['', Validators.required],
-    maxUses: [1, [Validators.required, Validators.min(1)]],
-  });
+  readonly showDialog = signal(false);
 
   ngOnInit(): void {
     this.loadCoupons();
   }
 
-  onSubmit(): void {
-    if (this.couponForm.invalid) return;
-
-    const { code, percentage, expiryDate, maxUses } = this.couponForm.getRawValue();
-
+  onCouponSaved(data: CouponFormData): void {
     this.couponService
       .createCoupon({
-        code,
-        percentage,
-        expiryDate: new Date(expiryDate).toISOString(),
-        maxUses,
+        code: data.code,
+        percentage: data.percentage,
+        expiryDate: data.expiryDate,
+        maxUses: data.maxUses,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.snackbar.success(this.translate.instant('snackbar.couponCreated'));
-          this.couponForm.reset();
-          this.showForm.set(false);
+          this.showDialog.set(false);
           this.loadCoupons();
         },
       });
   }
 
-  deleteCoupon(id: number): void {
+  async deleteCoupon(id: number): Promise<void> {
+    const confirmed = await this.confirmDialog.confirm(
+      this.translate.instant('dialog.confirmDelete')
+    );
+    if (!confirmed) return;
+
     this.couponService
       .deleteCoupon(id)
       .pipe(takeUntilDestroyed(this.destroyRef))

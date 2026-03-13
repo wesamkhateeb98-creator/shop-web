@@ -29,7 +29,7 @@ import { SnackbarService } from '@core/services/snackbar.service';
             }
           </svg>
 
-          <span class="flex-1">{{ msg.text }}</span>
+          <span class="flex-1 whitespace-pre-line">{{ msg.text }}</span>
 
           <!-- Dismiss -->
           <button

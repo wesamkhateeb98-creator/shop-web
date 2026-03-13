@@ -8,121 +8,33 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CurrencyPipe } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ProductService } from '@core/services/product.service';
 import { CategoryService } from '@core/services/category.service';
 import { SnackbarService } from '@core/services/snackbar.service';
+import { ConfirmDialogService } from '@core/services/confirm-dialog.service';
 import { Product, UpdateProductRequest } from '@core/models/product.model';
 import { Category } from '@core/models/category.model';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { ProductFormDialogComponent, ProductFormData } from '../product-form-dialog/product-form-dialog.component';
+import { DiscountFormDialogComponent, DiscountFormData } from '../discount-form-dialog/discount-form-dialog.component';
 import { environment } from '@env';
 
 @Component({
   selector: 'app-dashboard-products',
   standalone: true,
-  imports: [TranslateModule, CurrencyPipe, ReactiveFormsModule, EmptyStateComponent],
+  imports: [TranslateModule, CurrencyPipe, EmptyStateComponent, ProductFormDialogComponent, DiscountFormDialogComponent],
   template: `
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold">{{ 'dashboard.productsManagement' | translate }}</h1>
         <button
           class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
-          (click)="toggleForm()"
+          (click)="openAddDialog()"
         >
-          {{ showForm() ? ('dashboard.cancel' | translate) : ('dashboard.addProduct' | translate) }}
+          {{ 'dashboard.addProduct' | translate }}
         </button>
       </div>
-
-      <!-- Add/Edit Product Form -->
-      @if (showForm()) {
-        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-5">
-          <h2 class="text-lg font-semibold mb-4">
-            {{ editingProduct() ? ('dashboard.editProduct' | translate) : ('dashboard.addProduct' | translate) }}
-          </h2>
-          <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium mb-1.5">{{ 'dashboard.productName' | translate }}</label>
-                <input
-                  type="text"
-                  formControlName="name"
-                  class="w-full px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-1.5">{{ 'dashboard.category' | translate }}</label>
-                <select
-                  formControlName="categoryId"
-                  class="w-full px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                >
-                  <option [ngValue]="0" disabled>{{ 'dashboard.selectCategory' | translate }}</option>
-                  @for (cat of categories(); track cat.id) {
-                    <option [ngValue]="cat.id">{{ cat.name }}</option>
-                  }
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-1.5">{{ 'dashboard.price' | translate }}</label>
-                <input
-                  type="number"
-                  formControlName="price"
-                  min="0"
-                  step="0.01"
-                  class="w-full px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-1.5">{{ 'dashboard.stock' | translate }}</label>
-                <input
-                  type="number"
-                  formControlName="stock"
-                  min="0"
-                  class="w-full px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                />
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1.5">{{ 'dashboard.description' | translate }}</label>
-              <textarea
-                formControlName="description"
-                rows="3"
-                class="w-full px-4 py-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-none"
-              ></textarea>
-            </div>
-
-            <!-- Image upload (only for new products) -->
-            @if (!editingProduct()) {
-              <div>
-                <label class="block text-sm font-medium mb-1.5">{{ 'dashboard.image' | translate }}</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  (change)="onFileSelected($event)"
-                  class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[var(--color-primary)] file:text-white hover:file:bg-[var(--color-primary-hover)] file:cursor-pointer"
-                />
-              </div>
-            }
-
-            <div class="flex justify-end gap-3">
-              <button
-                type="button"
-                class="px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] transition-colors"
-                (click)="toggleForm()"
-              >
-                {{ 'dashboard.cancel' | translate }}
-              </button>
-              <button
-                type="submit"
-                class="px-6 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
-                [disabled]="productForm.invalid || isSubmitting()"
-              >
-                {{ editingProduct() ? ('dashboard.update' | translate) : ('dashboard.add' | translate) }}
-              </button>
-            </div>
-          </form>
-        </div>
-      }
 
       @if (products().length > 0) {
         <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)] overflow-hidden">
@@ -164,17 +76,32 @@ import { environment } from '@env';
                     </td>
                     <td class="px-5 py-3">
                       @if (product.discountPercentage) {
-                        <span class="text-[var(--color-success)]">{{ product.discountPercentage }}%</span>
+                        <div class="flex items-center gap-2">
+                          <span class="text-[var(--color-success)] font-medium">{{ product.discountPercentage }}%</span>
+                          <button
+                            class="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-[var(--color-danger)]"
+                            [title]="'dashboard.removeDiscount' | translate"
+                            (click)="removeDiscount(product)"
+                          >
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
                       } @else {
-                        <span class="text-[var(--color-text-secondary)]">-</span>
+                        <button
+                          class="px-2 py-1 text-xs font-medium rounded-md bg-[var(--color-primary-light)] text-[var(--color-primary)] hover:opacity-80 transition-opacity"
+                          (click)="openDiscountDialog(product)"
+                        >
+                          + {{ 'dashboard.addDiscount' | translate }}
+                        </button>
                       }
                     </td>
                     <td class="px-5 py-3">
                       <div class="flex items-center gap-2">
                         <button
                           class="p-1.5 rounded hover:bg-[var(--color-bg-secondary)] text-[var(--color-primary)]"
-                          title="Edit"
-                          (click)="editProduct(product)"
+                          (click)="openEditDialog(product)"
                         >
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -182,7 +109,6 @@ import { environment } from '@env';
                         </button>
                         <button
                           class="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-[var(--color-danger)]"
-                          title="Delete"
                           (click)="deleteProduct(product.id)"
                         >
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,7 +124,6 @@ import { environment } from '@env';
           </div>
         </div>
 
-        <!-- Pagination -->
         @if (totalPages() > 1) {
           <div class="flex justify-center items-center gap-2">
             <button
@@ -218,7 +143,7 @@ import { environment } from '@env';
             </button>
           </div>
         }
-      } @else if (!showForm()) {
+      } @else {
         <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)]">
           <app-empty-state
             [title]="'dashboard.noProducts' | translate"
@@ -229,27 +154,30 @@ import { environment } from '@env';
 
       <!-- Image Preview Lightbox -->
       @if (previewImage()) {
-        <div
-          class="fixed inset-0 z-[9998] bg-black/70 flex items-center justify-center p-4"
-          (click)="previewImage.set(null)"
-        >
+        <div class="fixed inset-0 z-[9998] bg-black/70 flex items-center justify-center p-4" (click)="previewImage.set(null)">
           <div class="relative max-w-2xl max-h-[80vh]" (click)="$event.stopPropagation()">
-            <button
-              class="absolute -top-3 -end-3 w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 shadow-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-10"
-              (click)="previewImage.set(null)"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <button class="absolute -top-3 -end-3 w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 shadow-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-10" (click)="previewImage.set(null)">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-            <img
-              [src]="previewImage()"
-              alt="Product preview"
-              class="max-w-full max-h-[80vh] rounded-xl shadow-2xl object-contain"
-            />
+            <img [src]="previewImage()" alt="Product preview" class="max-w-full max-h-[80vh] rounded-xl shadow-2xl object-contain" />
           </div>
         </div>
       }
+
+      <!-- Dialogs -->
+      <app-product-form-dialog
+        [visible]="showProductDialog()"
+        [product]="editingProduct()"
+        [categories]="categories()"
+        (saved)="onProductSaved($event)"
+        (closed)="showProductDialog.set(false); editingProduct.set(null)"
+      />
+      <app-discount-form-dialog
+        [visible]="showDiscountDialog()"
+        [product]="discountingProduct()"
+        (saved)="onDiscountSaved($event)"
+        (closed)="showDiscountDialog.set(false); discountingProduct.set(null)"
+      />
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -258,29 +186,22 @@ export class DashboardProductsComponent implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
   private readonly snackbar = inject(SnackbarService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly translate = inject(TranslateService);
-  private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly products = signal<Product[]>([]);
   readonly categories = signal<Category[]>([]);
   readonly currentPage = signal(1);
   readonly totalPages = signal(0);
-  readonly showForm = signal(false);
-  readonly editingProduct = signal<Product | null>(null);
-  readonly isSubmitting = signal(false);
   readonly previewImage = signal<string | null>(null);
 
-  private readonly baseUrl = environment.apiUrl.replace('/api/v1.0', '');
-  private selectedFile: File | null = null;
+  readonly showProductDialog = signal(false);
+  readonly editingProduct = signal<Product | null>(null);
+  readonly showDiscountDialog = signal(false);
+  readonly discountingProduct = signal<Product | null>(null);
 
-  readonly productForm = this.fb.nonNullable.group({
-    name: ['', Validators.required],
-    price: [0, [Validators.required, Validators.min(0.01)]],
-    stock: [0, [Validators.required, Validators.min(0)]],
-    description: ['', Validators.required],
-    categoryId: [0, [Validators.required, Validators.min(1)]],
-  });
+  private readonly baseUrl = environment.apiUrl.replace('/api/v1.0', '');
 
   ngOnInit(): void {
     this.loadProducts();
@@ -292,52 +213,48 @@ export class DashboardProductsComponent implements OnInit {
     return this.baseUrl + (image.startsWith('/') ? '' : '/') + image;
   }
 
-  toggleForm(): void {
-    this.showForm.update((v) => !v);
-    if (!this.showForm()) {
-      this.resetForm();
-    }
+  openAddDialog(): void {
+    this.editingProduct.set(null);
+    this.showProductDialog.set(true);
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.length) {
-      this.selectedFile = input.files[0];
-    }
+  openEditDialog(product: Product): void {
+    this.editingProduct.set(product);
+    this.showProductDialog.set(true);
   }
 
-  onSubmit(): void {
-    if (this.productForm.invalid) return;
+  onProductSaved(data: ProductFormData): void {
+    const editing = this.editingProduct();
 
-    this.isSubmitting.set(true);
-    const { name, price, stock, description, categoryId } = this.productForm.getRawValue();
-
-    if (this.editingProduct()) {
-      // Update existing product
-      const updateData: UpdateProductRequest = { name, price, stock, description, categoryId };
+    if (editing) {
+      const updateData: UpdateProductRequest = {
+        name: data.name,
+        price: data.price,
+        stock: data.stock,
+        description: data.description,
+        categoryId: data.categoryId,
+      };
       this.productService
-        .updateProduct(this.editingProduct()!.id, updateData)
+        .updateProduct(editing.id, updateData)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
-            this.isSubmitting.set(false);
             this.snackbar.success(this.translate.instant('snackbar.productUpdated'));
-            this.toggleForm();
+            this.showProductDialog.set(false);
+            this.editingProduct.set(null);
             this.loadProducts();
           },
-          error: () => this.isSubmitting.set(false),
         });
     } else {
-      // Create new product with FormData (multipart)
       const formData = new FormData();
       formData.append('key', crypto.randomUUID());
-      formData.append('name', name);
-      formData.append('price', price.toString());
-      formData.append('stock', stock.toString());
-      formData.append('description', description);
-      formData.append('categoryId', categoryId.toString());
-      if (this.selectedFile) {
-        formData.append('image', this.selectedFile);
+      formData.append('name', data.name);
+      formData.append('price', data.price.toString());
+      formData.append('stock', data.stock.toString());
+      formData.append('description', data.description);
+      formData.append('categoryId', data.categoryId.toString());
+      if (data.file) {
+        formData.append('image', data.file);
       }
 
       this.productService
@@ -345,35 +262,73 @@ export class DashboardProductsComponent implements OnInit {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
-            this.isSubmitting.set(false);
             this.snackbar.success(this.translate.instant('snackbar.productCreated'));
-            this.toggleForm();
+            this.showProductDialog.set(false);
             this.loadProducts();
           },
-          error: () => this.isSubmitting.set(false),
         });
     }
   }
 
-  editProduct(product: Product): void {
-    this.editingProduct.set(product);
-    this.productForm.patchValue({
-      name: product.name,
-      price: product.price,
-      stock: product.stock,
-      description: product.description,
-      categoryId: product.categoryId,
-    });
-    this.showForm.set(true);
-  }
+  async deleteProduct(id: number): Promise<void> {
+    const confirmed = await this.confirmDialog.confirm(
+      this.translate.instant('dialog.confirmDelete')
+    );
+    if (!confirmed) return;
 
-  deleteProduct(id: number): void {
     this.productService
       .deleteProduct(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.snackbar.success(this.translate.instant('snackbar.productDeleted'));
+          this.loadProducts();
+        },
+      });
+  }
+
+  openDiscountDialog(product: Product): void {
+    this.discountingProduct.set(product);
+    this.showDiscountDialog.set(true);
+  }
+
+  async onDiscountSaved(data: DiscountFormData): Promise<void> {
+    const confirmed = await this.confirmDialog.confirm(
+      this.translate.instant('dialog.confirmProcess')
+    );
+    if (!confirmed) return;
+
+    this.productService
+      .addDiscount(data.productId, {
+        percentage: data.percentage,
+        startDate: data.startDate,
+        endDate: data.endDate,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.snackbar.success(this.translate.instant('snackbar.discountAdded'));
+          this.showDiscountDialog.set(false);
+          this.discountingProduct.set(null);
+          this.loadProducts();
+        },
+      });
+  }
+
+  async removeDiscount(product: Product): Promise<void> {
+    if (!product.discountId) return;
+
+    const confirmed = await this.confirmDialog.confirm(
+      this.translate.instant('dialog.confirmDelete')
+    );
+    if (!confirmed) return;
+
+    this.productService
+      .removeDiscount(product.id, product.discountId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.snackbar.success(this.translate.instant('snackbar.discountRemoved'));
           this.loadProducts();
         },
       });
@@ -401,11 +356,5 @@ export class DashboardProductsComponent implements OnInit {
       .getCategories({ pageSize: 100 })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: (res) => this.categories.set(res.content) });
-  }
-
-  private resetForm(): void {
-    this.productForm.reset({ name: '', price: 0, stock: 0, description: '', categoryId: 0 });
-    this.editingProduct.set(null);
-    this.selectedFile = null;
   }
 }

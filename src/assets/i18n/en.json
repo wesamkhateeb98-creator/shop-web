@@ -94,7 +94,12 @@
     "noCouponsMessage": "Create your first coupon to offer discounts.",
     "editProduct": "Edit Product",
     "selectCategory": "Select category",
-    "category": "Category"
+    "category": "Category",
+    "addDiscount": "Add Discount",
+    "removeDiscount": "Remove Discount",
+    "discountPercentage": "Discount %",
+    "startDate": "Start Date",
+    "endDate": "End Date"
   },
   "snackbar": {
     "productCreated": "Product created successfully",
@@ -106,6 +111,8 @@
     "couponCreated": "Coupon created successfully",
     "couponDeleted": "Coupon deleted successfully",
     "orderStatusUpdated": "Order status updated",
+    "discountAdded": "Discount added successfully",
+    "discountRemoved": "Discount removed successfully",
     "serverError": "An unexpected server error occurred",
     "connectionError": "Unable to connect to server",
     "sessionExpired": "Session expired. Please login again.",
@@ -114,6 +121,13 @@
     "badRequest": "Bad request",
     "validationError": "Validation error",
     "preconditionFailed": "Precondition failed"
+  },
+  "dialog": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "confirmDelete": "Are you sure you want to delete?",
+    "confirmProcess": "Are you sure you want to complete this process?",
+    "editCategory": "Edit Category"
   },
   "footer": {
     "description": "Your one-stop shop for quality products.",

@@ -8,6 +8,7 @@ export interface Product {
   image: string;
   categoryId: number;
   discountPercentage: number | null;
+  discountId: number | null;
   finalPrice: number;
 }
 

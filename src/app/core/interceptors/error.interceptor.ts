@@ -27,10 +27,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             : null;
           if (validationErrors) {
             const messages = Object.values(validationErrors).flat();
-            snackbar.error(messages[0] || translate.instant('snackbar.validationError'));
+            snackbar.error(messages.join('\n') || translate.instant('snackbar.validationError'));
           } else {
             snackbar.error(
-              apiError?.detail ?? apiError?.title ?? translate.instant('snackbar.badRequest')
+              apiError?.extensions != null ? 
+                Object.values(apiError?.extensions)[0]: apiError?.title ?? translate.instant('snackbar.badRequest')
             );
           }
           break;
